@@ -79,7 +79,11 @@ function jsonObjectFormat(object: any, level: number, interval: number, lineBrea
         interval = 0;
     }
 
-    if (object instanceof Array) {
+    if (object === undefined) {
+        return "undefined";
+    } else if (object === null) {
+        return "null";
+    } else if (object instanceof Array) {
         startCharacter = lineBreak ? "[\n" : "[";
         endCharacter = multiplyString(" ", level * interval) + "]";
         for (let i = 0; i < object.length; i++) {
