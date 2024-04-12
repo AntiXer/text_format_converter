@@ -98,6 +98,8 @@ function jsonObjectFormat(object: any, level: number, interval: number, lineBrea
         content = "" + object;
     } else if (typeof(object) === "string") {
         content = JSON.stringify(object);
+    } else if (typeof(object) === "boolean") {
+        return object ? "true" : "false";
     } else {
         startCharacter = lineBreak ? "{\n" : "{";
         endCharacter = multiplyString(" ", level * interval) + "}";
