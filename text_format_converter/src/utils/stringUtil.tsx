@@ -63,14 +63,19 @@ function urlDecode(url: string): string {
 }
 
 function jsonFormat(str: string, lineBreak: boolean): string {
-    if (!isJsonString(str)) {
-        return "ERROR";
+    if (isJsonString(str)) {
+        return jsonObjectFormat(JSON.parse(str), 0, 4, lineBreak, false);
     }
 
-    return jsonObjectFormat(JSON.parse(str), 0, 4, lineBreak);
+    str = str.replace(/"/g, '\\"').replace(/'/g, '"').replace(/\\"/g, '\'');
+    if (isJsonString(str)) {
+        return jsonObjectFormat(JSON.parse(str), 0, 4, lineBreak, true);
+    }
+
+    return "ERROR";
 }
 
-function jsonObjectFormat(object: any, level: number, interval: number, lineBreak: boolean): string {
+function jsonObjectFormat(object: any, level: number, interval: number, lineBreak: boolean, transform: boolean): string {
     let startCharacter = "";
     let endCharacter = "";
     let content = "";
@@ -87,7 +92,7 @@ function jsonObjectFormat(object: any, level: number, interval: number, lineBrea
         startCharacter = lineBreak ? "[\n" : "[";
         endCharacter = multiplyString(" ", level * interval) + "]";
         for (let i = 0; i < object.length; i++) {
-            content += multiplyString(" ", (level + 1) * interval) + jsonObjectFormat(object[i], level + 1, interval, lineBreak);
+            content += multiplyString(" ", (level + 1) * interval) + jsonObjectFormat(object[i], level + 1, interval, lineBreak, transform);
             if (i === object.length - 1) {
                 content += lineBreak ? "\n" : "";
             } else {
@@ -97,7 +102,11 @@ function jsonObjectFormat(object: any, level: number, interval: number, lineBrea
     } else if (typeof(object) === "number") {
         content = "" + object;
     } else if (typeof(object) === "string") {
-        content = JSON.stringify(object);
+        if (transform) {
+            content = JSON.stringify(object).replace(/'/g, '\\\'').replace(/"/g, '\'').replace(/\\'/g, '"');
+        } else {
+            content = JSON.stringify(object);
+        }
     } else if (typeof(object) === "boolean") {
         return object ? "true" : "false";
     } else {
@@ -107,7 +116,11 @@ function jsonObjectFormat(object: any, level: number, interval: number, lineBrea
         let keyList = Object.keys(object);
         for (let i = 0; i < keyList.length; i++) {
             const key = keyList[i];
-            content += multiplyString(" ", (level + 1) * interval) + '"' + key + '"' + " : " +jsonObjectFormat(object[key], level + 1, interval, lineBreak);
+            if (transform) {
+                content += multiplyString(" ", (level + 1) * interval) + '\'' + key + '\'' + " : " +jsonObjectFormat(object[key], level + 1, interval, lineBreak, transform);
+            } else {
+                content += multiplyString(" ", (level + 1) * interval) + '"' + key + '"' + " : " +jsonObjectFormat(object[key], level + 1, interval, lineBreak, transform);
+            }
             if (i === keyList.length - 1) {
                 content += lineBreak ? "\n" : "";
             } else {
